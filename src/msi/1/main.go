@@ -20,11 +20,40 @@ var (
 	fout = flag.String("out", "out.txt", "fout - name of output file")
 )
 
+// KeyStream for RC4
+type KeyStream struct {
+	key  [256]byte
+	i, j byte
+}
+
+// NewKeyStream - constructor for RC4
+func NewKeyStream(key string) *KeyStream {
+	var s KeyStream
+	for i := 0; i <= 255; i++ {
+		s.key[i] = byte(i)
+	}
+
+	for i, j := 0, byte(0); i <= 255; i++ {
+		j = j + s.key[i] + key[i%len(key)]
+		s.key[i], s.key[j] = s.key[j], s.key[i]
+	}
+
+	return &s
+}
+
+// Next - return next key
+func (s *KeyStream) Next() byte {
+	s.i++
+	s.j += s.key[s.i]
+	s.key[s.i], s.key[s.j] = s.key[s.j], s.key[s.i]
+	return s.key[s.key[s.i]+s.key[s.j]]
+}
+
 func main() {
 	flag.Parse()
 
-	key, inName, outName := []byte(*fkey), *fin, *fout
-	log.Printf(`Use "%v" as secret key`, *fkey)
+	skey, inName, outName := *fkey, *fin, *fout
+	log.Printf(`Use "%v" as secret key`, skey)
 
 	in, err := os.OpenFile(inName, os.O_RDONLY, perm)
 	if err != nil {
@@ -37,6 +66,8 @@ func main() {
 		log.Panicln("failed open output file: err:", err)
 	}
 	log.Printf(`Use "%v" as output file`, outName)
+
+	stream := NewKeyStream(skey)
 
 	mem := make([]byte, 0, 256)
 	buffer := bytes.NewBuffer(mem)
@@ -52,7 +83,7 @@ func main() {
 
 		buf := buffer.Bytes()
 		for i := range buf {
-			buf[i] ^= key[nready%len(key)]
+			buf[i] ^= stream.Next()
 			nready++
 		}
 
