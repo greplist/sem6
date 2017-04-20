@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 
-unsigned global_level = 0, global_line = 1;
+unsigned global_level = 0, nline = 1, nsymbol = 1;
 
 %}
 
@@ -25,10 +25,11 @@ id           {letter}({letter}|{digit})*
 
 %%
 
-\n                      { ++global_line; printf("\n"); }
-:/\n                    { printf("(:) "); }
+\n                      { ++nline; nsymbol = 0; printf("\n"); }
+:/\n                    { ++nsymbol; printf("(:) "); }
 \n[ ]*/[^ ]             {
-    ++global_line;
+    ++nline;
+    nsymbol = yyleng - 1;
     printf("\n");
 
     unsigned curr_level = yyleng - 1;
@@ -42,8 +43,8 @@ id           {letter}({letter}|{digit})*
             break;
         default:
             if ( delta > 0 || delta % 4 != 0 ) {
-                printf("\nError: Line %d:%d  invalid number of tokens: delta: %d\n",
-                    global_line, yyleng, delta);
+                printf("\n\nError: Line %d:%d  invalid number of tokens: delta: %d\n",
+                    nline, nsymbol, delta);
                 exit(-1);
             }
             for (int i = 0, n = -delta / 4; i < n; i++)
@@ -53,21 +54,28 @@ id           {letter}({letter}|{digit})*
     global_level = curr_level;
 }
 
-{boolean}            { printf("(BOOL, %s) ", yytext); }
-{integer}            { printf("(INTEGER, %s) ", yytext); }
-{double}             { printf("(DOUBLE, %s) ", yytext); }
+{boolean}            { nsymbol += yyleng; printf("(BOOL, %s) ", yytext); }
+{integer}            { nsymbol += yyleng; printf("(INTEGER, %s) ", yytext); }
+{double}             { nsymbol += yyleng; printf("(DOUBLE, %s) ", yytext); }
 
-[,]                  { printf("(COMMA) "); }
-{bracket}            { printf("(BRASKET, '%s') ", yytext); }
-{binop}              { printf("(BINOP, %s) ", yytext); }
-{condop}             { printf("(CONDOP, %s) ", yytext); }
-{relop}              { printf("(RELOP, %s)", yytext); }
-{asop}               { printf("(ASSIGMENT, %s) ", yytext); }
+[,]                  { nsymbol += yyleng; printf("(COMMA) "); }
+{bracket}            { nsymbol += yyleng; printf("(BRASKET, '%s') ", yytext); }
+{binop}              { nsymbol += yyleng; printf("(BINOP, %s) ", yytext); }
+{condop}             { nsymbol += yyleng; printf("(CONDOP, %s) ", yytext); }
+{relop}              { nsymbol += yyleng; printf("(RELOP, %s) ", yytext); }
+{asop}               { nsymbol += yyleng; printf("(ASSIGMENT, %s) ", yytext); }
 
 
-{keyword}            { printf("(KEYWORD, %s) ", yytext); }
+{keyword}            { nsymbol += yyleng; printf("(KEYWORD, %s) ", yytext); }
 
-{id}                 { printf("(ID, '%s') ", yytext); }
+{id}                 { nsymbol += yyleng; printf("(ID, '%s') ", yytext); }
+
+[ ]+                 { nsymbol += yyleng; }
+.                    {
+    nsymbol += yyleng;
+    printf("\n\nError: Line %d:%d invalid lexem: %s\n", nline, nsymbol, yytext);
+    exit(-1);
+}
 
 %%
 
