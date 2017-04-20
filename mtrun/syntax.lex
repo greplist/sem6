@@ -2,30 +2,42 @@
 /*
     syntax analyser
 */
-unsigned nword = 0, nchar = 0, nline = 0;
+
 %}
 
-%option noyywrap
+letter   [a-zA-Z_]
+digit    [0-9]
+token    [ \t]
 
-word [^ \t\n]+
-eol \n
+boolean  TRUE | FALSE
+integer  -?{digit}+
+double   {integer}()\.{digit}+
+
+operator < | <= | > | >= | == | !=
+
+name    {letter}({letter}|{digit})+
 
 %%
-{word}      { nword++; nchar += yyleng; }
-{eol}       { nchar++; nline++; }
-.           { nchar++; }
+
+{boolean}            { return BOOL; }
+{integer}            { return INT; }
+{double}             { return DOUBLE; }
+
+{token}=/{token}     { return ASSIGMENT; }
+{operator}           { return OPERATOR; }
+
+if                   {  return IF; }
+else                 {  return ELSE; }
+while                {  return WHILE; }
+for                  {  return FOR; }
+def                  {  return DEF; }
+:\n                  {  return TOKEN; }
+
+{name}               { return NAME; }
+
+[ \t\n]+             {}
 %%
 
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        FILE *file = fopen(argv[1], "r");
-        if (!file) {
-            fprintf(stderr, "could not open %s\n", argv[1]);
-            exit(1);
-        }
-        yyin = file;
-    }
-    yylex();
-    printf("%d, %d, %d\n", nline, nword, nchar);
-    return 0;
+int yywrap() {
+    return 1;
 }

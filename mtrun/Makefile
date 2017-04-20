@@ -1,23 +1,11 @@
-CC = gcc
-CFLAGS = -c -O2 -std=c99 -Wall -Wextra -g
+CC = g++
+CFLAGS = -c -O2 -std=c++14 -g #-Wall -Wextra
 
-SOURCES = lex.yy.c
-OBJECTS = $(SOURCES:.c=.o)
-
-INPUT = test.py
-EXECUTABLE = analyzer.bin
-
-all: $(EXECUTABLE)
-	./$(EXECUTABLE) $(INPUT)
-
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(EXECUTABLE)
-
-.cpp.o: .cpp
-	$(CC) $(CFLAGS) $< -o $@
-
-lex.yy.c: syntax.lex
-	lex $<
+1:
+	lex 1.lex
+	$(CC) $(CFLAGS) lex.yy.c -o lex.yy.c.o
+	$(CC) lex.yy.c.o -o 1.bin
+	./1.bin test.py
 
 clean:
-	rm -rf *.o *.yy.c *.bin
+	rm -rf *.o *.yy.c *.tab.c *.bin
