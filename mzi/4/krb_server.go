@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -44,6 +46,18 @@ func CAHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	session := genSession()
 
+	tiket := &Tiket{
+		CliID:      request.CliID,
+		TimeMarker: request.TimeMarker,
+		TTL:        time.Hour,
+		Session:    session,
+		ClientIP:   r.RemoteAddr[:strings.LastIndexByte(r.RemoteAddr, ':')],
+	}
+	cert := &Certificate{
+		ServerID: request.ServiceID,
+		TTL:      time.Hour,
+		Session:  session,
+	}
 }
 
 func TGSHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

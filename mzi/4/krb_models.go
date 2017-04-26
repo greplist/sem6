@@ -36,8 +36,8 @@ type Request struct {
 }
 
 type Response struct {
-	Certificate []byte `json:"crypted"`
-	Tiket       []byte `json:"TGT"`
+	Certificate []byte `json:"certificate"`
+	Tiket       []byte `json:"tiket"`
 }
 
 func genSession() []byte {
