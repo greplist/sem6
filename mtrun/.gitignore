@@ -1,4 +1,5 @@
-*.yy.c
+*.yy.*
 *.o
 *.bin
 *.tab.*
+*.swp
