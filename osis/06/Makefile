@@ -19,4 +19,4 @@ build_suplib:
 	$(CC) $< $(LDFLAGS) -o $@
 
 clean:
-	-rm -r *.o *.bin *~ *.new
+	rm -rf *.o *.bin *~ *.new
