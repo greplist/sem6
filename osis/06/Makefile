@@ -1,19 +1,22 @@
 CC = g++
 CFLAGS = -c -std=gnu++11 -Wall -Wextra
-LDFLAGS = -lc
+LDFLAGS = -L./../suplib -lsuplib -lc -Wl,-rpath ./../suplib
 
-OBJECTS = astring.o aio.o sighand.o
-BINARY = sighand.bin
+LABS = $(wildcard *.c)
+OBJECTS = $(LABS:.c=.o)
+BINARIES = $(OBJECTS:.o=.bin)
 
-all: clean $(BINARY)
+all: clean build_suplib $(OBJECTS) $(BINARIES)
 	echo "Compiled!"
+
+build_suplib:
+	make -C ./../suplib
 
 %.o: %.c
 	$(CC) $(CFLAGS) $< -o $@
 
-sighand.bin: $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
-
+%.bin: %.o
+	$(CC) $< $(LDFLAGS) -o $@
 
 clean:
-	rm -rf *.o *.bin *~ *.new
+	-rm -r *.o *.bin *~ *.new

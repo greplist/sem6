@@ -3,8 +3,8 @@
 #include "fcntl.h"
 #include "syslog.h"
 
-#include "aio.h"
-#include "astring.h"
+#include "../suplib/astring.h"
+#include "../suplib/aio.h"
 
 const char* PATH_TO_CONF = "/home/anton/anton_work/sem6/osis/06/sig.conf";
 const mode_t open_mode = O_RDONLY;
@@ -119,7 +119,6 @@ bool load_config(const char* path, bool is_interrupt)
     int fd_conf = 0;
     astring_arr arr = {NULL, 0};
     if ((fd_conf = open(path, open_mode)) == -1) {
-        printf("can't open config\n");
         return false;
     }
 
