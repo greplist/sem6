@@ -1,2 +1,7 @@
+text.txt
 *.bin
 *.o
+*.cmake
+*.json
+CMakeFiles
+CMakeCache.txt
