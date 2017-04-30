@@ -30,7 +30,7 @@ void Object<T>::Print(int indent) {
 class Node : public IPrintable {
 public:
 	std::string op;
-	
+
 	IPrintable *left;
 	IPrintable *right;
 
@@ -49,13 +49,24 @@ public:
 	virtual void Print(int indent);
 };
 
+class Variable : public IPrintable {
+public:
+	Variable(std::string name);
+
+	unsigned type;
+	unsigned value;
+	std::string name;
+
+	virtual void Print(int indent);
+};
+
 class Block {
 
 public:
 	Block(): ids() {}
-	
-	Object<std::string> * GetOrCreate(std::string name);
+
+	Variable* GetOrCreate(std::string name);
 private:
-	std::map<std::string, Object<std::string> *> ids;
+	std::map<std::string, Variable *> ids;
 
 };

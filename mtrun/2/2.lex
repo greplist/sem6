@@ -39,7 +39,7 @@ id           {letter}({letter}|{digit})*
 {integer}		{
 	yylval.val = new Object<int>(atoi(yytext));
 	return INT;
-}	
+}
 
 or			{ return OR; }
 and			{ return AND; }
@@ -52,9 +52,10 @@ else			{ return ELSE; }
 \n			{ nline++; return '\n'; }
 {one_char}        	{ return yytext[0]; }
 
-{id}			{ 
-	yylval.val = block.GetOrCreate(std::string(yytext, yyleng));
-	return ID;
+{id}			{
+	Variable *v = block.GetOrCreate(std::string(yytext, yyleng));
+	yylval.val = v;
+	return v->type;
 }
 
 [ ]+			;
@@ -65,4 +66,3 @@ else			{ return ELSE; }
 int yywrap() {
 	return 1;
 }
-

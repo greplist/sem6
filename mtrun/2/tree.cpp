@@ -22,10 +22,16 @@ void MultiNode::Print(int indent) {
 		(*it)->Print(indent);
 }
 
-Object<std::string> * Block::GetOrCreate(std::string name) {
-	Object<std::string> *var = this->ids[name];
+Variable::Variable(std::string name) : type(UNKNOWN_ID), name(name) {}
+
+void Variable::Print(int indent) {
+	print(this->name, indent);
+}
+
+Variable* Block::GetOrCreate(std::string name) {
+	Variable *var = this->ids[name];
 	if ( !var ) {
-		var = new Object<std::string>(name);
+		var = new Variable(name);
 		this->ids[name] = var;
 	}
 	return var;

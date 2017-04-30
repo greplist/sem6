@@ -14,7 +14,7 @@ void yyerror(const char* s);
 	IPrintable *val;
 }
 
-%token <val> BOOL INT ID
+%token <val> BOOL INT UNKNOWN_ID BOOL_ID INT_ID FUNC_ID
 %token OR AND NOT
 %token IF ELSE WHILE DEF
 %left '-' '+' OR
@@ -35,11 +35,17 @@ stmt_list: stmt_list stmt		{ (dynamic_cast<MultiNode *>($1))->Add($2); $$ = $1; 
 }
 	;
 
-stmt: ID '=' int_expr '\n'		{ $$ = new Node("=", $1, $3); }
-	| ID '=' bool_expr '\n'		{ $$ = new Node("=", $1, $3); }
-	| while_stmt '\n'		{ $$ = $1; }
-	| if_stmt '\n'			{ $$ = $1; }
-	| '\n'				{ $$ = new Object<std::string>(""); }
+stmt: UNKNOWN_ID '=' int_expr '\n'		{ (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
+ 	| BOOL_ID '=' int_expr '\n'			{ (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
+ 	| INT_ID '=' int_expr '\n'		    { (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
+ 	| FUNC_ID '=' int_expr '\n'		    { (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
+	| UNKNOWN_ID '=' bool_expr '\n'		{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
+	| BOOL_ID '=' bool_expr '\n'		{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
+	| INT_ID '=' bool_expr '\n'			{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
+	| FUNC_ID '=' bool_expr '\n'		{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
+	| while_stmt '\n'					{ $$ = $1; }
+	| if_stmt '\n'						{ $$ = $1; }
+	| '\n'								{ $$ = new Object<std::string>(""); }
 	;
 
 while_stmt: WHILE bool_expr block {
@@ -70,26 +76,27 @@ if_stmt: IF bool_expr block {
 block: ':' '\n' stmt_list ';' 		{ $$ = $3; }
 
 int_expr: int_expr '+' int_expr		{ $$ = new Node("+", $1, $3); }
-	| int_expr '-' int_expr		{ $$ = new Node("-", $1, $3); }
-	| int_expr '*' int_expr		{ $$ = new Node("*", $1, $3); }
-	| int_expr '/' int_expr		{ $$ = new Node("/", $1, $3); }
+	| int_expr '-' int_expr			{ $$ = new Node("-", $1, $3); }
+	| int_expr '*' int_expr			{ $$ = new Node("*", $1, $3); }
+	| int_expr '/' int_expr			{ $$ = new Node("/", $1, $3); }
 	| '-' int_expr %prec UMINUS 	{ $$ = new Node("-", $2, NULL); }
-	| '(' int_expr ')'		{ $$ = $2; }
-	| INT 				{ $$ = $1; }
-	| ID				{ $$ = $1; }
+	| '(' int_expr ')'				{ $$ = $2; }
+	| INT_ID						{ $$ = $1; }
+	| INT 							{ $$ = $1; }
 	;
 
 bool_expr: bool_expr OR bool_expr	{ $$ = new Node("OR", $1, $3); }
-	| bool_expr AND bool_expr	{ $$ = new Node("AND", $1, $3); }
-	| NOT bool_expr			{ $$ = new Node("NOT", $2, NULL); }
-	| '(' bool_expr ')'		{ $$ = $2; }
-	| int_expr '<' int_expr		{ $$ = new Node("<", $1, $3); }
-	| int_expr '>' int_expr		{ $$ = new Node(">", $1, $3); }
-	| int_expr '=' '=' int_expr	{ $$ = new Node("==", $1, $4); }
-	| int_expr '>' '=' int_expr	{ $$ = new Node(">=", $1, $4); }
-	| int_expr '<' '=' int_expr	{ $$ = new Node("<=", $1, $4); }
-	| int_expr '!' '=' int_expr	{ $$ = new Node("!=", $1, $4); }
-	| BOOL				{ $$ = $1; }
+	| bool_expr AND bool_expr		{ $$ = new Node("AND", $1, $3); }
+	| NOT bool_expr					{ $$ = new Node("NOT", $2, NULL); }
+	| '(' bool_expr ')'				{ $$ = $2; }
+	| int_expr '<' int_expr			{ $$ = new Node("<", $1, $3); }
+	| int_expr '>' int_expr			{ $$ = new Node(">", $1, $3); }
+	| int_expr '=' '=' int_expr		{ $$ = new Node("==", $1, $4); }
+	| int_expr '>' '=' int_expr		{ $$ = new Node(">=", $1, $4); }
+	| int_expr '<' '=' int_expr		{ $$ = new Node("<=", $1, $4); }
+	| int_expr '!' '=' int_expr		{ $$ = new Node("!=", $1, $4); }
+	| BOOL_ID						{ $$ = $1; }
+	| BOOL							{ $$ = $1; }
 	;
 
 %%
