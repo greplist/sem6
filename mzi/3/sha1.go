@@ -6,14 +6,17 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
+	"io/ioutil"
 )
 
 var (
 	s string
+	f string
 )
 
 func init() {
 	flag.StringVar(&s, "k", "testkey", "k - key for sha1")
+	flag.StringVar(&f, "f", "sha1.go", "f - file for imit")
 }
 
 func makeBlocks(data []byte) [][16]uint32 {
@@ -115,4 +118,8 @@ func main() {
 
 	fmt.Printf("Sha1 custom: % x\n", mysha1(data))
 	fmt.Printf("Sha1 stdlib: % x\n", sha1.Sum(data))
+
+	data, _ = ioutil.ReadFile(f)
+	fmt.Printf("Imit custom: %x \n", mysha1(data))
+	fmt.Printf("Imit stdlib: %x\n", sha1.Sum(data))
 }
