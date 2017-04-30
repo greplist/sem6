@@ -46,6 +46,7 @@ public:
 	MultiNode() : nodes() {}
 
 	void Add(IPrintable *node) { nodes.push_back(node); }
+	int Len() { return nodes.size(); }
 	virtual void Print(int indent);
 };
 

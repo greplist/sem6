@@ -22,6 +22,7 @@ void yyerror(const char* s);
 %nonassoc UMINUS NOT
 
 %type <val> int_expr bool_expr while_stmt if_stmt stmt_list stmt block
+%type <val> id id_list param params_list func_stmt func_call
 %%
 
 code: stmt_list '\n' 			{ $1->Print(0); }
@@ -35,17 +36,62 @@ stmt_list: stmt_list stmt		{ (dynamic_cast<MultiNode *>($1))->Add($2); $$ = $1; 
 }
 	;
 
-stmt: UNKNOWN_ID '=' int_expr '\n'		{ (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
- 	| BOOL_ID '=' int_expr '\n'			{ (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
- 	| INT_ID '=' int_expr '\n'		    { (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
- 	| FUNC_ID '=' int_expr '\n'		    { (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
-	| UNKNOWN_ID '=' bool_expr '\n'		{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
-	| BOOL_ID '=' bool_expr '\n'		{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
-	| INT_ID '=' bool_expr '\n'			{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
-	| FUNC_ID '=' bool_expr '\n'		{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
-	| while_stmt '\n'					{ $$ = $1; }
-	| if_stmt '\n'						{ $$ = $1; }
+stmt: id '=' int_expr '\n'				{ (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
+	| id '=' bool_expr '\n'				{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
+	| while_stmt 						{ $$ = $1; }
+	| if_stmt 							{ $$ = $1; }
+	| func_call							{ $$ = $1; }
+	| func_stmt							{ $$ = $1; }
 	| '\n'								{ $$ = new Object<std::string>(""); }
+	;
+
+func_call: FUNC_ID '(' params_list ')'		{
+	Variable *f = dynamic_cast<Variable *>($1);
+	MultiNode *p = dynamic_cast<MultiNode *>($3);
+	if ( f->value != p->Len() ) {
+		yyerror("func call with invalid number of params");
+		exit(-1);
+	}
+
+	$$ = new Node("CALL", $1, $3);
+}
+
+params_list: params_list ',' param 		{ (dynamic_cast<MultiNode *>($1))->Add($3); $$ = $1; }
+	| param								{
+	MultiNode *node = new MultiNode();
+	node->Add($1);
+	$$ = node;
+}
+
+param: int_expr						{ $$ = $1; }
+	| bool_expr 					{ $$ = $1; }
+	| FUNC_ID						{ $$ = $1; }
+	;
+
+func_stmt: DEF UNKNOWN_ID '(' id_list ')' block {
+	Variable *f = dynamic_cast<Variable *>($2);
+	MultiNode *p = dynamic_cast<MultiNode *>($4);
+	f->type = FUNC_ID;
+	f->value = p->Len();
+
+	MultiNode *node = new MultiNode();
+	node->Add(new Node("DEF ", $2, NULL));
+	node->Add(new Node("(", $4, NULL));
+	node->Add(new Node("): ", $6, NULL));
+	$$ = node;
+}
+
+id_list: id_list ',' id					{ (dynamic_cast<MultiNode *>($1))->Add($3); $$ = $1; }
+	| id								{
+	MultiNode *node = new MultiNode();
+	node->Add($1);
+	$$ = node;
+}
+
+id : UNKNOWN_ID							{ $$ = $1; }
+	| BOOL_ID							{ $$ = $1; }
+	| INT_ID							{ $$ = $1; }
+	| FUNC_ID							{ $$ = $1; }
 	;
 
 while_stmt: WHILE bool_expr block {

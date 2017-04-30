@@ -19,7 +19,7 @@ boolean      True|False
 integer      -?{digit}+
 double       {integer}\.{digit}+
 
-one_char     "+"|"-"|"*"|"/"|"!"|"="|"<"|">"|"("|")"|":"|";"
+one_char     "+"|"-"|"*"|"/"|"!"|"="|"<"|">"|"("|")"|":"|";"|","
 
 keyword      break|case|continue|def|default|else|for|if|return|switch|while|print
 
@@ -27,7 +27,7 @@ id           {letter}({letter}|{digit})*
 
 %%
 
-{boolean}		{
+{boolean}			{
 	bool val(false);
 	if ( yytext[0] == 'T' ) {
 		val = true;
@@ -36,30 +36,34 @@ id           {letter}({letter}|{digit})*
 	return BOOL;
 }
 
-{integer}		{
+{integer}			{
 	yylval.val = new Object<int>(atoi(yytext));
 	return INT;
 }
 
-or			{ return OR; }
-and			{ return AND; }
-not			{ return NOT; }
+or					{ return OR; }
+and					{ return AND; }
+not					{ return NOT; }
 
-if 			{ return IF; }
-while			{ return WHILE; }
-else			{ return ELSE; }
+if 					{ return IF; }
+while				{ return WHILE; }
+else				{ return ELSE; }
+def					{ return DEF; }
 
-\n			{ nline++; return '\n'; }
+\n					{ nline++; return '\n'; }
 {one_char}        	{ return yytext[0]; }
 
-{id}			{
+{id}				{
 	Variable *v = block.GetOrCreate(std::string(yytext, yyleng));
 	yylval.val = v;
 	return v->type;
 }
 
-[ ]+			;
-.		  	{ fprintf(stderr, "Lexical error: Line %d: invalid lexem %s (ASCII: %c)\n", nline, yytext, yytext[0]); exit(-1); }
+[ ]+				;
+.		  			{
+	fprintf(stderr, "Lexical error: Line %d: invalid lexem %s (ASCII: %c)\n", nline, yytext, yytext[0]);
+	exit(-1);
+}
 
 %%
 
