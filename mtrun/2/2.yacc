@@ -5,7 +5,7 @@
 #include "lex.yy.h"
 
 extern Block block;
-extern unsigned nline;
+extern unsigned nline, nchar;
 
 void yyerror(const char* s);
 %}
@@ -40,7 +40,7 @@ stmt: id '=' int_expr '\n'				{
 	Variable * var = (dynamic_cast<Variable *>($1));
 	var->type = INT_ID;
 	var->val = (dynamic_cast<Node *>($3))->val;
-	$$ = new Node("=", $1, $3); 
+	$$ = new Node("=", $1, $3);
 }
 	| id '=' bool_expr '\n'				{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
 	| while_stmt 						{ $$ = $1; }
@@ -203,5 +203,5 @@ int main(int argc, char **argv) {
 }
 
 void yyerror(const char* s) {
-    fprintf(stderr, "Error: Line %d: %s\n", nline, s);
+    fprintf(stderr, "Error: Line %d:%d %s\n", nline, nchar, s);
 }

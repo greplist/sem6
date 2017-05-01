@@ -5,7 +5,7 @@
 #include "tree.h"
 #include "y.tab.h"
 
-unsigned global_level = 0, nline = 1;
+unsigned global_level = 0, nline = 1, nchar = 0;
 
 Block block;
 
@@ -27,6 +27,8 @@ id           {letter}({letter}|{digit})*
 %%
 
 {boolean}			{
+	nchar += yyleng;
+
 	bool val(false);
 	if ( yytext[0] == 'T' ) {
 		val = true;
@@ -36,31 +38,37 @@ id           {letter}({letter}|{digit})*
 }
 
 {integer}			{
+	nchar += yyleng;
+
 	yylval.val = new Object<int>(atoi(yytext));
 	return INT;
 }
 
-or					{ return OR; }
-and					{ return AND; }
-not					{ return NOT; }
+or					{ nchar += yyleng; return OR; }
+and					{ nchar += yyleng; return AND; }
+not					{ nchar += yyleng; return NOT; }
 
-if 					{ return IF; }
-while				{ return WHILE; }
-else				{ return ELSE; }
-def					{ return DEF; }
+if 					{ nchar += yyleng; return IF; }
+while				{ nchar += yyleng; return WHILE; }
+else				{ nchar += yyleng; return ELSE; }
+def					{ nchar += yyleng; return DEF; }
 
-\n					{ nline++; return '\n'; }
-{one_char}        	{ return yytext[0]; }
+\n					{ nchar = 0; nline++; return '\n'; }
+{one_char}        	{ nchar += yyleng; return yytext[0]; }
 
 {id}				{
+	nchar += yyleng;
+
 	Variable *v = block.GetOrCreate(std::string(yytext, yyleng));
 	yylval.val = v;
 	return v->type;
 }
 
-[ ]+				;
+[ ]+				{ nchar += yyleng; }
 .		  			{
-	fprintf(stderr, "Lexical error: Line %d: invalid lexem %s (ASCII: %c)\n", nline, yytext, yytext[0]);
+	nchar += yyleng;
+
+	fprintf(stderr, "Lexical error: Line %d:%d invalid lexem %s (ASCII: %c)\n", nline, nchar, yytext, yytext[0]);
 	exit(-1);
 }
 
