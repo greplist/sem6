@@ -12,9 +12,8 @@ public:
 
 template <class T>
 class Object : public IPrintable {
-private:
-	T val;
 public:
+	T val;
 
 	Object(T v) : val(v) {}
 	virtual void Print(int indent);
@@ -30,6 +29,7 @@ void Object<T>::Print(int indent) {
 class Node : public IPrintable {
 public:
 	std::string op;
+	int val;
 
 	IPrintable *left;
 	IPrintable *right;
@@ -55,7 +55,7 @@ public:
 	Variable(std::string name);
 
 	unsigned type;
-	unsigned value;
+	int val;
 	std::string name;
 
 	virtual void Print(int indent);

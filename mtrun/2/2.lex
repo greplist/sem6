@@ -17,7 +17,6 @@ token        [ ]
 
 boolean      True|False
 integer      -?{digit}+
-double       {integer}\.{digit}+
 
 one_char     "+"|"-"|"*"|"/"|"!"|"="|"<"|">"|"("|")"|":"|";"|","
 

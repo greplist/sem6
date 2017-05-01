@@ -36,7 +36,12 @@ stmt_list: stmt_list stmt		{ (dynamic_cast<MultiNode *>($1))->Add($2); $$ = $1; 
 }
 	;
 
-stmt: id '=' int_expr '\n'				{ (dynamic_cast<Variable *>($1))->type = INT_ID; $$ = new Node("=", $1, $3); }
+stmt: id '=' int_expr '\n'				{
+	Variable * var = (dynamic_cast<Variable *>($1));
+	var->type = INT_ID;
+	var->val = (dynamic_cast<Node *>($3))->val;
+	$$ = new Node("=", $1, $3); 
+}
 	| id '=' bool_expr '\n'				{ (dynamic_cast<Variable *>($1))->type = BOOL_ID; $$ = new Node("=", $1, $3); }
 	| while_stmt 						{ $$ = $1; }
 	| if_stmt 							{ $$ = $1; }
@@ -48,7 +53,7 @@ stmt: id '=' int_expr '\n'				{ (dynamic_cast<Variable *>($1))->type = INT_ID; $
 func_call: FUNC_ID '(' params_list ')'		{
 	Variable *f = dynamic_cast<Variable *>($1);
 	MultiNode *p = dynamic_cast<MultiNode *>($3);
-	if ( f->value != p->Len() ) {
+	if ( f->val != p->Len() ) {
 		yyerror("func call with invalid number of params");
 		exit(-1);
 	}
@@ -72,7 +77,7 @@ func_stmt: DEF UNKNOWN_ID '(' id_list ')' block {
 	Variable *f = dynamic_cast<Variable *>($2);
 	MultiNode *p = dynamic_cast<MultiNode *>($4);
 	f->type = FUNC_ID;
-	f->value = p->Len();
+	f->val = p->Len();
 
 	MultiNode *node = new MultiNode();
 	node->Add(new Node("DEF ", $2, NULL));
@@ -121,14 +126,49 @@ if_stmt: IF bool_expr block {
 
 block: ':' '\n' stmt_list ';' 		{ $$ = $3; }
 
-int_expr: int_expr '+' int_expr		{ $$ = new Node("+", $1, $3); }
-	| int_expr '-' int_expr			{ $$ = new Node("-", $1, $3); }
-	| int_expr '*' int_expr			{ $$ = new Node("*", $1, $3); }
-	| int_expr '/' int_expr			{ $$ = new Node("/", $1, $3); }
-	| '-' int_expr %prec UMINUS 	{ $$ = new Node("-", $2, NULL); }
+int_expr: int_expr '+' int_expr		{
+	int first = (dynamic_cast<Node *>($1))->val, second = (dynamic_cast<Node *>($3))->val;
+	Node *node = new Node("+", $1, $3);
+	node->val = first + second;
+}
+	| int_expr '-' int_expr			{
+	int first = (dynamic_cast<Node *>($1))->val, second = (dynamic_cast<Node *>($3))->val;
+	Node *node = new Node("-", $1, $3);
+	node->val = first - second;
+	$$ = node;
+}
+	| int_expr '*' int_expr			{
+	int first = (dynamic_cast<Node *>($1))->val, second = (dynamic_cast<Node *>($3))->val;
+	Node *node = new Node("*", $1, $3);
+	node->val = first * second;
+	$$ = node;
+}
+	| int_expr '/' int_expr			{
+	int first = (dynamic_cast<Node *>($1))->val, second = (dynamic_cast<Node *>($3))->val;
+	if (second == 0) {
+		yyerror("divison by zero");
+		exit(-1);
+	}
+	Node *node = new Node("/", $1, $3);
+	node->val = first / second;
+	$$ = node;
+}
+	| '-' int_expr %prec UMINUS 	{
+	Node *node = new Node("-", $2, NULL);
+	node->val = - (dynamic_cast<Node *>($2))->val;
+	$$ = node;
+}
 	| '(' int_expr ')'				{ $$ = $2; }
-	| INT_ID						{ $$ = $1; }
-	| INT 							{ $$ = $1; }
+	| INT_ID						{
+	Node *node = new Node("Int Variable", $1, NULL);
+	node->val = (dynamic_cast<Variable *>($1))->val;
+	$$ = node;
+}
+	| INT 							{
+	Node *node = new Node("Int Const", $1, NULL);
+	node->val = (dynamic_cast<Object<int> *>($1))->val;
+	$$ = node;
+}
 	;
 
 bool_expr: bool_expr OR bool_expr	{ $$ = new Node("OR", $1, $3); }
